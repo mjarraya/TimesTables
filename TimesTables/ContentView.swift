@@ -46,17 +46,107 @@ struct GridStack<Content: View>: View {
 }
 
 struct Game: View {
+    @Binding var showMenu: Bool
+    @Binding var selectedLevel: String
+    @Binding var selectedTables: [Int]
+
+    @State private var questions = [[Int]]()
+    @State private var userAnswer = [String]()
+    @State private var attempts = 0
+    @State private var opacity = 1.0
+    var current: [Int] {
+        return questions.first ?? []
+    }
+    
     var body: some View {
-        Text("GAME")
+        VStack {
+            if current.count > 0 {
+                HStack {
+                    Text("\(current.first!)")
+                    Text("x")
+                    Text("\(current.last!)")
+                }.opacity(opacity)
+                HStack {
+                    ForEach(0...9, id: \.self) { number in
+                        Button(action: {
+                            self.addNumber(number: number)
+                        }) {
+                            Text("\(number)")
+                        }
+                    }
+
+                }
+                HStack {
+                    ForEach(userAnswer, id: \.self) { number in
+                        Text("\(number)")
+                            .modifier(Shake(animatableData: CGFloat(self.attempts))).opacity(self.opacity)
+                    }
+                    if userAnswer.count > 0 {
+                        Button(action: validateAnswer) {
+                            Text("Validate").opacity(opacity)
+                        }
+
+                        Button(action: resetAnswer) {
+                            Text("Reset").opacity(opacity)
+                        }
+                    }
+                }
+            } else {
+                Button(action: restartGame) {
+                    Text("Play again")
+                }
+            }
+        }.onAppear(perform: initGame)
+    }
+    func initGame() {
+        for number in selectedTables {
+            for i in 1...12 {
+                questions.append([number, i])
+            }
+        }
+        questions.shuffle()
+        if let numberLevel = Int(selectedLevel) {
+            questions = Array(questions.prefix(numberLevel))
+        }
+        
+        self.opacity = 1
+    }
+    func addNumber(number: Int) {
+        userAnswer.append(String(number))
+    }
+    func validateAnswer() {
+        let answer = Int(userAnswer.joined())
+        self.opacity = 0
+        if answer == current.first! * current.last! {
+            withAnimation(.easeOut(duration: 0.5)) {
+                questions.removeFirst()
+                userAnswer = []
+                self.opacity = 1
+            }
+        } else {
+            withAnimation {
+                attempts += 1
+            }
+        }
+    }
+    func resetAnswer() {
+        userAnswer = []
+    }
+    func restartGame() {
+        withAnimation(.easeOut(duration: 0.5)) {
+            showMenu = true
+        }
     }
 }
 
 struct Menu: View {
     @State private var availableTables: [Int] = Array(1...12)
-    @State private var selectedTables = [Int]()
     @State private var availableLevels = ["5", "10", "20", "All"]
-    @State private var selectedLevel = "All"
+
     @Binding var showMenu: Bool
+    @Binding var selectedLevel: String
+    @Binding var selectedTables: [Int]
+    
     @State private var attempts = 0
     
     var body: some View {
@@ -124,16 +214,18 @@ struct Menu: View {
 
 struct ContentView: View {
     @State private var showMenu = true
+    @State private var selectedLevel = "All"
+    @State private var selectedTables = [Int]()
     var body: some View {
         NavigationView {
             ZStack {
                 LinearGradient(gradient: Gradient(colors: [.orange, .red]), startPoint: .topLeading, endPoint: .topTrailing).zIndex(0)
                                     .edgesIgnoringSafeArea(.all)
                 if showMenu {
-                    Menu(showMenu: $showMenu.animation(.easeIn(duration: 0.5))).zIndex(1)
+                    Menu(showMenu: $showMenu.animation(.easeIn(duration: 0.5)), selectedLevel: $selectedLevel, selectedTables: $selectedTables).zIndex(1)
                 }
                 else {
-                    Game().zIndex(1)
+                    Game(showMenu: $showMenu, selectedLevel: $selectedLevel, selectedTables: $selectedTables).zIndex(1)
                 }
             }
             .navigationBarItems(leading: showMenu ? nil : Button(action: {
@@ -141,7 +233,7 @@ struct ContentView: View {
                     self.showMenu = true
                 }
             }) {
-                Text("🔁").frame(width: 50, height: 37.5)
+                Text("🔁")
                 })
         }
         
