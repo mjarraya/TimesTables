@@ -8,6 +8,31 @@
 
 import SwiftUI
 
+enum ButtonTypes {
+    case primary
+    case secondary
+}
+
+struct NumberButton: ViewModifier {
+    var type: ButtonTypes
+    
+    func body(content: Content) -> some View {
+        content
+        .frame(width: 50, height: 50)
+            .background(type == ButtonTypes.primary ? Color.purple : Color.white)
+            .foregroundColor(type == ButtonTypes.primary ? Color.white : Color.purple)
+        .cornerRadius(10)
+    }
+}
+
+
+
+extension View {
+    func numberButton(_ type: ButtonTypes) -> some View {
+        self.modifier(NumberButton(type: type))
+    }
+}
+
 struct Shake: GeometryEffect {
     var amount: CGFloat = 10
     var shakesPerUnit = 3
@@ -63,8 +88,11 @@ struct Game: View {
             if current.count > 0 {
                 HStack {
                     Text("\(current.first!)")
+                        .numberButton(ButtonTypes.primary)
                     Text("x")
+                        .numberButton(ButtonTypes.secondary)
                     Text("\(current.last!)")
+                    .numberButton(ButtonTypes.primary)
                 }.opacity(opacity)
                 HStack {
                     ForEach(0...9, id: \.self) { number in
@@ -72,6 +100,7 @@ struct Game: View {
                             self.addNumber(number: number)
                         }) {
                             Text("\(number)")
+                                .numberButton(ButtonTypes.primary)
                         }
                     }
 
@@ -79,22 +108,23 @@ struct Game: View {
                 HStack {
                     ForEach(userAnswer, id: \.self) { number in
                         Text("\(number)")
+                            .numberButton(ButtonTypes.primary)
                             .modifier(Shake(animatableData: CGFloat(self.attempts))).opacity(self.opacity)
                     }
                     if userAnswer.count > 0 {
                         Button(action: validateAnswer) {
-                            Text("Validate").opacity(opacity)
-                        }
+                            Text("Validate")
+                        }.opacity(opacity)
 
                         Button(action: resetAnswer) {
-                            Text("Reset").opacity(opacity)
-                        }
+                            Text("Reset")
+                        }.opacity(opacity)
                     }
                 }
             } else {
                 Button(action: restartGame) {
                     Text("Play again")
-                }
+                }.opacity(opacity)
             }
         }.onAppear(perform: initGame)
     }
@@ -124,6 +154,7 @@ struct Game: View {
                 self.opacity = 1
             }
         } else {
+            self.opacity = 1
             withAnimation {
                 attempts += 1
             }
