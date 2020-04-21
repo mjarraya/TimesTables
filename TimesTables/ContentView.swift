@@ -88,14 +88,14 @@ struct Game: View {
                 VStack{
                     HStack {
                         Text("\(current.first!)")
+                            .animation(.spring(response: 0.0, dampingFraction:0.2))
                             .numberButton(ButtonTypes.primary)
-                            .transition(.asymmetric(insertion: .opacity, removal: .scale))
                         Text("x")
+                            .animation(.spring(response: 0.0, dampingFraction:0.2))
                             .numberButton(ButtonTypes.secondary)
-                            .transition(.asymmetric(insertion: .opacity, removal: .scale))
                         Text("\(current.last!)")
+                            .animation(.spring(response: 0.0, dampingFraction:0.2))
                             .numberButton(ButtonTypes.primary)
-                            .transition(.asymmetric(insertion: .opacity, removal: .scale))
                         
                     }
                     Spacer()
@@ -167,6 +167,7 @@ struct Game: View {
                         Spacer()
                         Button(action: restartGame) {
                             Text("Play")
+                                .font(.title)
                                 .frame(width: 100, height: 75)
                                 .background(Color.purple)
                                 .cornerRadius(20)
@@ -208,9 +209,7 @@ struct Game: View {
             withAnimation {
                 userAnswer = []
             }
-            withAnimation(.easeOut(duration: 0.2)) {
-                questions.removeFirst()
-            }
+            questions.removeFirst()
 
         } else {
             withAnimation {
