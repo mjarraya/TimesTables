@@ -18,7 +18,7 @@ struct NumberButton: ViewModifier {
     
     func body(content: Content) -> some View {
         content
-            .frame(width: 50, height: 50)
+            .frame(width: 60, height: 60)
             .background(type == ButtonTypes.primary ? Color.purple : Color.white)
             .foregroundColor(type == ButtonTypes.primary ? Color.white : Color.purple)
             .cornerRadius(10)
@@ -77,7 +77,7 @@ struct Game: View {
     @State private var questions = [[Int]]()
     @State private var userAnswer = [String]()
     @State private var attempts = 0
-    @State private var opacity = 1.0
+    
     var current: [Int] {
         return questions.first ?? []
     }
@@ -87,13 +87,13 @@ struct Game: View {
             if current.count != 0 {
                 VStack{
                     HStack {
-                        Text("\(current.first!)").opacity(opacity)
+                        Text("\(current.first!)")
                             .numberButton(ButtonTypes.primary)
                             .transition(.asymmetric(insertion: .opacity, removal: .scale))
-                        Text("x").opacity(opacity)
+                        Text("x")
                             .numberButton(ButtonTypes.secondary)
                             .transition(.asymmetric(insertion: .opacity, removal: .scale))
-                        Text("\(current.last!)").opacity(opacity)
+                        Text("\(current.last!)")
                             .numberButton(ButtonTypes.primary)
                             .transition(.asymmetric(insertion: .opacity, removal: .scale))
                         
@@ -104,7 +104,7 @@ struct Game: View {
                             ForEach(userAnswer, id: \.self) { number in
                                 Text("\(number)")
                                     .numberButton(ButtonTypes.primary)
-                                    .modifier(Shake(animatableData: CGFloat(self.attempts))).opacity(self.opacity)
+                                    .modifier(Shake(animatableData: CGFloat(self.attempts)))
                             }
                         }
                         HStack {
@@ -112,20 +112,20 @@ struct Game: View {
                             if userAnswer.count > 0 {
                                 Button(action: validateAnswer) {
                                     Text("OK")
+                                    .frame(width: 75, height: 42.5)
+                                    .background(Color.white)
+                                    .foregroundColor(Color.purple)
+                                    .cornerRadius(10)
                                 }
-                                .frame(width: 75, height: 37.5)
-                                .background(Color.white)
-                                .foregroundColor(Color.purple)
-                                .cornerRadius(10)
-                                .opacity(opacity)
+
                                 Button(action: resetAnswer) {
                                     Text("Reset")
+                                    .frame(width: 75, height: 42.5)
+                                    .background(Color.white)
+                                    .foregroundColor(Color.purple)
+                                    .cornerRadius(10)
                                 }
-                                .frame(width: 75, height: 37.5)
-                                .background(Color.white)
-                                .foregroundColor(Color.purple)
-                                .cornerRadius(10)
-                                .opacity(opacity)
+
                                 .modifier(Shake(animatableData: CGFloat(attempts)))
                             }
                             Spacer()
@@ -140,8 +140,9 @@ struct Game: View {
                                     self.addNumber(number: number)
                                 }) {
                                     Text("\(number)")
+                                    .numberButton(ButtonTypes.primary)
                                 }
-                                .numberButton(ButtonTypes.primary)
+                                
                             }
                         }
                         .padding(.top, 10)
@@ -151,7 +152,8 @@ struct Game: View {
                                     self.addNumber(number: number)
                                 }) {
                                     Text("\(number)")
-                                }.numberButton(ButtonTypes.primary)
+                                 .numberButton(ButtonTypes.primary)
+                                }
                             }
                         }
                         .padding(.top, 10)
@@ -164,7 +166,7 @@ struct Game: View {
                     HStack{
                         Spacer()
                         Button(action: restartGame) {
-                            Text("Again")
+                            Text("Play")
                                 .frame(width: 100, height: 75)
                                 .background(Color.purple)
                                 .cornerRadius(20)
@@ -188,8 +190,6 @@ struct Game: View {
         if let numberLevel = Int(selectedLevel) {
             questions = Array(questions.prefix(numberLevel))
         }
-        
-        self.opacity = 1
     }
     func addNumber(number: Int) {
         if userAnswer.count > 2 {
@@ -204,15 +204,15 @@ struct Game: View {
     }
     func validateAnswer() {
         let answer = Int(userAnswer.joined())
-        self.opacity = 0
         if answer == current.first! * current.last! {
-            withAnimation(.easeOut(duration: 0.2)) {
+            withAnimation {
                 userAnswer = []
-                questions.removeFirst()
-                self.opacity = 1
             }
+            withAnimation(.easeOut(duration: 0.2)) {
+                questions.removeFirst()
+            }
+
         } else {
-            self.opacity = 1
             withAnimation {
                 attempts += 1
             }
@@ -248,8 +248,8 @@ struct Menu: View {
                     self.selectTable(table: row * 3 + col + 1)
                 }) {
                     Text("\(row * 3 + col + 1)")
+                    .numberButton(self.selectedTables.contains(row * 3 + col + 1) ? ButtonTypes.secondary : ButtonTypes.primary)
                 }
-                .numberButton(self.selectedTables.contains(row * 3 + col + 1) ? ButtonTypes.secondary : ButtonTypes.primary)
                 .padding(10)
             }            .modifier(Shake(animatableData: CGFloat(attempts)))
             Text("How many questions ?").font(.title).foregroundColor(.white).padding()
@@ -259,12 +259,14 @@ struct Menu: View {
                         self.selectLevel(level: level)
                     }) {
                         Text(level)
+                        .numberButton(level == self.selectedLevel ? ButtonTypes.secondary : ButtonTypes.primary)
                     }
-                    .numberButton(level == self.selectedLevel ? ButtonTypes.secondary : ButtonTypes.primary)
+                    
                 }
             }
             Button(action: startGame) {
                 Text("Play")
+                    .font(.title)
                     .frame(width: 100, height: 75)
                     .background(Color.purple)
                     .cornerRadius(20)
@@ -320,8 +322,13 @@ struct ContentView: View {
                     self.showMenu = true
                 }
             }) {
-                Text("🔁")
-                })
+                Text("Settings")
+            }
+            .frame(width: 75, height: 37.5)
+            .background(Color.purple)
+            .foregroundColor(Color.white)
+            .cornerRadius(10)
+            )
         }
         
     }
