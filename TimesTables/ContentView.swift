@@ -26,7 +26,6 @@ struct NumberButton: ViewModifier {
 }
 
 
-
 extension View {
     func numberButton(_ type: ButtonTypes) -> some View {
         self.modifier(NumberButton(type: type))
@@ -85,19 +84,19 @@ struct Game: View {
     
     var body: some View {
         VStack {
-            if current.count > 0 {
+            if current.count != 0 {
                 VStack{
                     HStack {
                         Text("\(current.first!)").opacity(opacity)
                             .numberButton(ButtonTypes.primary)
-                        .transition(.asymmetric(insertion: .opacity, removal: .scale))
+                            .transition(.asymmetric(insertion: .opacity, removal: .scale))
                         Text("x").opacity(opacity)
                             .numberButton(ButtonTypes.secondary)
-                        .transition(.asymmetric(insertion: .opacity, removal: .scale))
+                            .transition(.asymmetric(insertion: .opacity, removal: .scale))
                         Text("\(current.last!)").opacity(opacity)
                             .numberButton(ButtonTypes.primary)
-                        .transition(.asymmetric(insertion: .opacity, removal: .scale))
-
+                            .transition(.asymmetric(insertion: .opacity, removal: .scale))
+                        
                     }
                     Spacer()
                     VStack {
@@ -109,9 +108,10 @@ struct Game: View {
                             }
                         }
                         HStack {
+                            Spacer()
                             if userAnswer.count > 0 {
                                 Button(action: validateAnswer) {
-                                    Text("Validate")
+                                    Text("OK")
                                 }
                                 .frame(width: 75, height: 37.5)
                                 .background(Color.white)
@@ -126,7 +126,9 @@ struct Game: View {
                                 .foregroundColor(Color.purple)
                                 .cornerRadius(10)
                                 .opacity(opacity)
+                                .modifier(Shake(animatableData: CGFloat(attempts)))
                             }
+                            Spacer()
                         }
                         .padding(.top, 20)
                     }
@@ -138,7 +140,8 @@ struct Game: View {
                                     self.addNumber(number: number)
                                 }) {
                                     Text("\(number)")
-                                }.numberButton(ButtonTypes.primary)
+                                }
+                                .numberButton(ButtonTypes.primary)
                             }
                         }
                         .padding(.top, 10)
@@ -153,17 +156,25 @@ struct Game: View {
                         }
                         .padding(.top, 10)
                     }
-                    .padding(.bottom, 100)
-            }
-            } else {
-                Button(action: restartGame) {
-                    Text("Play")
-                        .frame(width: 100, height: 75)
-                        .background(Color.purple)
-                        .cornerRadius(20)
-                        .foregroundColor(Color.white)
                 }
-                                        .transition(.opacity)
+                .padding(.bottom, 100)
+            } else {
+                VStack {
+                    Spacer()
+                    HStack{
+                        Spacer()
+                        Button(action: restartGame) {
+                            Text("Again")
+                                .frame(width: 100, height: 75)
+                                .background(Color.purple)
+                                .cornerRadius(20)
+                                .foregroundColor(Color.white)
+                        }
+                        .transition(.opacity)
+                        Spacer()
+                    }
+                    Spacer()
+                }
             }
         }.onAppear(perform: initGame)
     }
@@ -181,13 +192,21 @@ struct Game: View {
         self.opacity = 1
     }
     func addNumber(number: Int) {
-        userAnswer.append(String(number))
+        if userAnswer.count > 2 {
+            withAnimation {
+                attempts += 1
+            }
+        } else {
+            withAnimation(.easeOut(duration: 0.2)){
+                userAnswer.append(String(number))
+            }
+        }
     }
     func validateAnswer() {
         let answer = Int(userAnswer.joined())
         self.opacity = 0
         if answer == current.first! * current.last! {
-            withAnimation(.easeInOut(duration: questions.count == 1 ? 0 :  0.5)) {
+            withAnimation(.easeOut(duration: 0.2)) {
                 userAnswer = []
                 questions.removeFirst()
                 self.opacity = 1
@@ -200,10 +219,12 @@ struct Game: View {
         }
     }
     func resetAnswer() {
-        userAnswer = []
+        withAnimation {
+            userAnswer = []
+        }
     }
     func restartGame() {
-        withAnimation(.easeOut(duration: 0.5)) {
+        withAnimation(.easeOut(duration: 0.2)) {
             showMenu = true
         }
     }
@@ -211,7 +232,7 @@ struct Game: View {
 
 struct Menu: View {
     @State private var availableTables: [Int] = Array(1...12)
-    @State private var availableLevels = ["1", "10", "20", "All"] // change
+    @State private var availableLevels = ["5", "10", "20", "All"] // change
     
     @Binding var showMenu: Bool
     @Binding var selectedLevel: String
@@ -286,19 +307,21 @@ struct ContentView: View {
                 LinearGradient(gradient: Gradient(colors: [.orange, .red]), startPoint: .topLeading, endPoint: .topTrailing).zIndex(0)
                     .edgesIgnoringSafeArea(.all)
                 if showMenu {
-                    Menu(showMenu: $showMenu.animation(.easeIn(duration: 0.5)), selectedLevel: $selectedLevel, selectedTables: $selectedTables).zIndex(1)
+                    Menu(showMenu: $showMenu.animation(.easeOut(duration: 0.2)), selectedLevel: $selectedLevel, selectedTables: $selectedTables).zIndex(1)
                 }
                 else {
                     Game(showMenu: $showMenu, selectedLevel: $selectedLevel, selectedTables: $selectedTables).zIndex(1)
                 }
+                
             }
-//            .navigationBarItems(leading: showMenu ? nil : Button(action: {
-//                withAnimation(.easeOut(duration: 0.5)){
-//                    self.showMenu = true
-//                }
-//            }) {
-//                Text("🔁")
-//                })
+                
+            .navigationBarItems(leading: showMenu ? nil : Button(action: {
+                withAnimation(.easeOut(duration: 0.2)){
+                    self.showMenu = true
+                }
+            }) {
+                Text("🔁")
+                })
         }
         
     }
